@@ -5,10 +5,10 @@ import PropTypes from "prop-types";
 const Form = ({ validatorConfig, onSubmit, defaultData, children }) => {
   const [data, setData] = useState(defaultData);
   const [errors, setErrors] = useState({});
-  const handleChange = (change) => {
+  const handleChange = useCallback((change) => {
     const { name, value } = change;
     setData((prevState) => ({ ...prevState, [name]: value }));
-  };
+  }, [setData]);
   const handleKeyDown = useCallback((event) => {
     if (event.keyCode === 13) {
       event.preventDefault();
@@ -19,16 +19,16 @@ const Form = ({ validatorConfig, onSubmit, defaultData, children }) => {
     }
   }, []);
   useEffect(() => validate(), [data]);
-  const validate = () => {
+  const validate = useCallback((data) => {
     const errors = validator(data, validatorConfig);
     setErrors(errors);
     return Object.keys(errors).length === 0;
-  };
+  }, [validatorConfig, setErrors]);
   const isValid = Object.keys(errors).length === 0;
   const clonedElements = React.Children.map(children, (child) => {
     let config = {};
 
-    if (typeof child.type === "function") {
+    if (typeof child.type === "object") {
       data[child.props.name] = data[child.props.name] ?? "";
       const value = data[child.props.name];
       const error = errors[child.props.name];
@@ -44,7 +44,7 @@ const Form = ({ validatorConfig, onSubmit, defaultData, children }) => {
   });
   const handleSubmit = (event) => {
     event.preventDefault();
-    const isValid = validate();
+    const isValid = validate(data);
 
     if (isValid) {
       onSubmit(data);
