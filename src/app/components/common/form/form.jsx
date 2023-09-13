@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { validator } from "../../../utils/validator";
 import PropTypes from "prop-types";
 
@@ -9,6 +9,15 @@ const Form = ({ validatorConfig, onSubmit, defaultData, children }) => {
     const { name, value } = change;
     setData((prevState) => ({ ...prevState, [name]: value }));
   };
+  const handleKeyDown = useCallback((event) => {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      const currentField = event.target;
+      const form = event.target.form;
+      const currentFieldIndex = [].indexOf.call(form, currentField);
+      form.elements[currentFieldIndex + 1].focus();
+    }
+  }, []);
   useEffect(() => validate(), [data]);
   const validate = () => {
     const errors = validator(data, validatorConfig);
@@ -23,7 +32,7 @@ const Form = ({ validatorConfig, onSubmit, defaultData, children }) => {
       data[child.props.name] = data[child.props.name] ?? "";
       const value = data[child.props.name];
       const error = errors[child.props.name];
-      config = { ...child.props, onChange: handleChange, value, error };
+      config = { ...child.props, onChange: handleChange, onKeyDown: handleKeyDown, value, error };
     }
 
     if (child.type === "button" &&
